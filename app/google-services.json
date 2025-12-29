@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1073081052891",
+    "firebase_url": "https://practice-application-2f46d-default-rtdb.firebaseio.com",
+    "project_id": "practice-application-2f46d",
+    "storage_bucket": "practice-application-2f46d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1073081052891:android:0b5a065cd2311a9fc2e6fe",
+        "android_client_info": {
+          "package_name": "com.example.connectifychattingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1Ak00fnQtCiNbmCfXnDjLADj9rJP3iZ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
