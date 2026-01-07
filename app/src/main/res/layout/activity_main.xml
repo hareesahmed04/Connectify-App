@@ -8,16 +8,14 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
-
     <androidx.appcompat.widget.Toolbar
+
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:titleTextColor="@color/white" />
-
+        app:title="Connectify"
+        app:titleTextColor="@color/white"
+        android:background="#1E88E5"/>
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
@@ -28,7 +26,9 @@
         android:id="@+id/btNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/windowBackground"
-        app:menu="@menu/nav_icons" />
-
+        app:menu="@menu/nav_icons"
+        app:backgroundTint="@color/blue"
+        android:background="@color/blue"
+        app:itemIconTint="@color/black"
+        app:itemTextColor="@color/black" />
 </LinearLayout>

@@ -13,7 +13,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="#1E88E5"
         app:contentInsetStart="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,10 +24,11 @@
                 android:id="@+id/backArrow"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.529"
                 app:srcCompat="@drawable/back_arrow"
                 app:tint="@color/white" />
 
@@ -123,6 +124,7 @@
                 android:textColorHint="#99000000" />
 
             <ImageView
+                android:id="@+id/openFolder"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="8dp"
@@ -130,6 +132,7 @@
                 app:tint="#808080" />
 
             <ImageView
+                android:id="@+id/CameraOpen"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/camera1"

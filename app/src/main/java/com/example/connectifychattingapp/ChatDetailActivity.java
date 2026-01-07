@@ -1,14 +1,16 @@
 package com.example.connectifychattingapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
+import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.connectifychattingapp.databinding.ActivityChatDetailBinding;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -22,10 +24,12 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class ChatDetailActivity extends AppCompatActivity {
-
     ActivityChatDetailBinding binding;
     FirebaseDatabase database;
     FirebaseAuth auth;
+    String receiverId;
+    ArrayList<MessageModel> messageModels;
+    ChatAdapter chatAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +42,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         auth=FirebaseAuth.getInstance();
 
         final String senderId=auth.getUid();
-        String recieveId=getIntent().getStringExtra("userId");
+
+        receiverId=getIntent().getStringExtra("userId");
         String userName=getIntent().getStringExtra("userName");
         String profilePic=getIntent().getStringExtra("profilePic");
 
@@ -52,17 +57,15 @@ public class ChatDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-        final ArrayList<MessageModel> messageModels=new ArrayList<>();
-
-        final ChatAdapter chatAdapter=new ChatAdapter(messageModels,this);
+          messageModels=new ArrayList<>();
+         chatAdapter=new ChatAdapter(messageModels,this);
         binding.chatRecyclerView.setAdapter(chatAdapter);
 
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         binding.chatRecyclerView.setLayoutManager(layoutManager);
 
-        final String senderRoom= senderId + recieveId;
-        final String receiverRoom= recieveId + senderId;
+        final String senderRoom= senderId + receiverId;
+        final String receiverRoom= receiverId + senderId;
 
         database.getReference().child("chats")
                         .child(senderRoom)
@@ -75,17 +78,12 @@ public class ChatDetailActivity extends AppCompatActivity {
                                         messageModels.add(model);
                                     }
                                     chatAdapter.notifyDataSetChanged();
-
                                     }
-
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError error) {
 
                                     }
                                 });
-
-
-
 
         binding.btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,7 +100,6 @@ public class ChatDetailActivity extends AppCompatActivity {
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void unused) {
-
                                 }
                             });
 
@@ -117,9 +114,51 @@ public class ChatDetailActivity extends AppCompatActivity {
                                 }
                             });
                 }
-
         });
+        binding.btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu popupMenu = new PopupMenu(ChatDetailActivity.this, v);
+                popupMenu.getMenuInflater().inflate(R.menu.chat_menu, popupMenu.getMenu());
 
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (item.getItemId() == R.id.clearChat) {
+                            showClearChatDialog(senderRoom);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                popupMenu.show();
+            }
+        });
+    }
+    private void showClearChatDialog(String senderRoom) {
+        new AlertDialog.Builder(this)
+                .setTitle("Clear Chat")
+                .setMessage("This will delete all messages in this conversation. The user will remain in your chat list.")
+                .setPositiveButton("Clear", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
 
+                        // 1. Delete messages from Firebase for the current user (senderRoom)
+                        database.getReference().child("chats")
+                                .child(senderRoom)
+                                .removeValue()
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        // 2. Clear the local list so the UI updates immediately
+                                        messageModels.clear();
+                                        chatAdapter.notifyDataSetChanged();
+                                        Toast.makeText(ChatDetailActivity.this, "Chat cleared", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

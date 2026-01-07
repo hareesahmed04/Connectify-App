@@ -1,11 +1,10 @@
 package com.example.connectifychattingapp;
 public class Users {
     String profilePic ,username,mail,password,userId,lastMessage;
-
+    private boolean isSelected = false;
     public String getUserId() {
         return userId;
     }
-
     public void setUserId(String userId) {
         this.userId = userId;
     }
@@ -17,7 +16,6 @@ public class Users {
         this.password = password;
         this.userId = userId;
         this.lastMessage = lastMessage;
-
     }
     public Users(){}
 
@@ -31,11 +29,15 @@ public class Users {
     public String getProfilePic() {
         return profilePic;
     }
-
+    public boolean isSelected() {
+        return isSelected;
+    }
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
     public void setProfilePic(String profilePic) {
         this.profilePic = profilePic;
     }
-
     public String getusername() {
         return username;
     }

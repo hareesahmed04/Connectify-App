@@ -1,7 +1,9 @@
 package com.example.connectifychattingapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +16,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class AddContactActivity extends AppCompatActivity {
-
     ActivityAddContactBinding binding;
     FirebaseDatabase database;
     FirebaseAuth auth;
@@ -28,20 +29,28 @@ public class AddContactActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         auth = FirebaseAuth.getInstance();
 
+        binding.backCon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(AddContactActivity.this,MainActivity.class);
+                startActivity(intent);
+
+            }
+        });
         binding.btnSave.setOnClickListener(v -> {
             String emailInput = binding.etEmail.getText().toString().trim(); // Assuming you use this field for email
-            String customName = binding.etFirstName.getText().toString().trim();
+            String FirstName = binding.etFirstName.getText().toString().trim();
+            String LastName = binding.etLastName.getText().toString().trim();
 
-            if (TextUtils.isEmpty(emailInput) || TextUtils.isEmpty(customName)) {
+            if (TextUtils.isEmpty(emailInput) || TextUtils.isEmpty(FirstName) || TextUtils.isEmpty(LastName)) {
                 Toast.makeText(this, "Please enter both Name and Email", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            searchAndAddUser(emailInput, customName);
+            searchAndAddUser(emailInput, FirstName , LastName);
         });
     }
-
-    private void searchAndAddUser(String email, String customName) {
+    private void searchAndAddUser(String email, String firstName ,String lastName) {
         // Query to find user by email in the main "Users" node
         Query query = database.getReference().child("Users").orderByChild("mail").equalTo(email);
 
@@ -57,11 +66,10 @@ public class AddContactActivity extends AppCompatActivity {
                             Toast.makeText(AddContactActivity.this, "You cannot add yourself", Toast.LENGTH_SHORT).show();
                             return;
                         }
-
                         // Create a new User object for YOUR contact list
                         // Using the name YOU gave, but the PIC from their profile
                         Users newContact = new Users();
-                        newContact.setusername(customName);
+                        newContact.setusername(firstName + " " + lastName);
                         newContact.setProfilePic(foundUser.getProfilePic());
                         newContact.setUserId(foundUserId);
 
@@ -80,7 +88,6 @@ public class AddContactActivity extends AppCompatActivity {
                     Toast.makeText(AddContactActivity.this, "No user found with this email", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });

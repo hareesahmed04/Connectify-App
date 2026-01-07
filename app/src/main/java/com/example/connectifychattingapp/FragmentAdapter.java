@@ -25,23 +25,8 @@ public class FragmentAdapter extends FragmentPagerAdapter {
                 return new ChatFragment();
         }
     }
-
     @Override
     public int getCount() {
         return 3;
     }
-
-//    @Nullable
-//    @Override
-//    public CharSequence getPageTitle(int position) {
-//        String title=null;
-//        if(position==0){
-//            title="Chats";
-//        } else if (position==1) {
-//            title="Contacts";
-//        }else if(position==2){
-//            title="Call Logs";
-//        }
-//        return title;
-//    }
 }

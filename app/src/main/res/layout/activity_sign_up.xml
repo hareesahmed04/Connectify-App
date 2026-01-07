@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/connectify1" />
+        app:srcCompat="@drawable/logo1" />
 
     <TextView
         android:id="@+id/headerText"
@@ -105,44 +105,42 @@
         android:id="@+id/orText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="or sign up with"
+        android:layout_marginTop="28dp"
+        android:text="or Sign Up with"
         android:textColor="#757575"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/formCard" />
+        app:layout_constraintTop_toBottomOf="@+id/formCard" />
 
     <LinearLayout
-        android:id="@+id/socialLayout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/orText">
 
-        <Button
-            android:id="@+id/btnGoogle"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="55dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:text="Google"
-            android:textColor="#444444"
-            app:icon="@drawable/google_logo_svg"
-            app:iconTint="@null"
-            app:strokeColor="#DDDDDD" />
 
-        <Button
-            android:id="@+id/btnFacebook"
-            android:layout_width="0dp"
-            android:layout_height="55dp"
-            android:layout_weight="1"
-            android:backgroundTint="#3B5998"
-            android:text="Facebook"
-            app:iconTint="@null"
-            app:icon="@drawable/facbook_logo_svg" />
+    <Button
+        android:id="@+id/btnGoogle"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="162dp"
+        android:layout_height="64dp"
+        android:layout_weight="1"
+        android:text="Google"
+        android:textColor="#444444"
+        android:textSize="18dp"
+        app:icon="@drawable/google_logo_svg"
+        app:iconTint="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="#DDDDDD"
+        tools:layout_editor_absoluteY="612dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

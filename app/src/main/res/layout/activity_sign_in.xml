@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/connectify1" />
+        app:srcCompat="@drawable/logo1" />
 
     <TextView
         android:id="@+id/headerText"
@@ -104,35 +104,30 @@
         app:layout_constraintTop_toBottomOf="@id/loginCard" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/orText">
 
         <Button
             android:id="@+id/btnGoogle"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="55dp"
+            android:layout_width="162dp"
+            android:layout_height="64dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:text="Google"
+            android:textSize="18dp"
             android:textColor="#444444"
             app:icon="@drawable/google_logo_svg"
             app:iconTint="@null"
             app:strokeColor="#DDDDDD" />
 
-        <Button
-            android:id="@+id/btnFacebook"
-            android:layout_width="0dp"
-            android:layout_height="55dp"
-            android:layout_weight="1"
-            android:backgroundTint="#3B5998"
-            android:text="Facebook"
-            app:iconTint="@null"
-            app:icon="@drawable/facbook_logo_svg" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -18,11 +17,16 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
+    public interface OnUserLongClickListener {
+        void onUserLongClick(Users user, int position);
+    }
     ArrayList<Users> list;
     Context context;
-    public UserAdapter(ArrayList<Users> list, Context context) {
+    private OnUserLongClickListener longClickListener;
+    public UserAdapter(ArrayList<Users> list, Context context, OnUserLongClickListener longClickListener) {
         this.list = list;
         this.context = context;
+        this.longClickListener = longClickListener;
     }
     @NonNull
     @Override
@@ -36,6 +40,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
         Picasso.get().load(users.getProfilePic()).placeholder(R.drawable.user1).into(holder.image);
         holder.UserNameList.setText(users.getusername());
 
+        holder.itemView.setOnLongClickListener(v -> {
+            if (longClickListener != null) {
+                longClickListener.onUserLongClick(users, position);
+            }
+            return true;
+        });
+
         //Showing last Messgae of User
         FirebaseDatabase.getInstance().getReference().child("chats")
                         .child(FirebaseAuth.getInstance().getUid() + users.getUserId())
@@ -46,12 +57,18 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
                                                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                                                         if(snapshot.hasChildren()){
                                                             for(DataSnapshot snapshot1 : snapshot.getChildren()){
-                                                                holder.lastmsg.setText(snapshot1.child("message").getValue().toString());
+                                                                Object messageValue = snapshot1.child("message").getValue();
+                                                                if (messageValue != null) {
+                                                                    holder.lastmsg.setText(messageValue.toString());
+                                                                } else {
+                                                                    holder.lastmsg.setText("Tap to chat");
+                                                                }
                                                             }
+                                                        } else {
+                                                            // Handle case where there are no messages at all
+                                                            holder.lastmsg.setText("Tap to chat");
                                                         }
-
                                                     }
-
                                                     @Override
                                                     public void onCancelled(@NonNull DatabaseError error) {
 
@@ -76,7 +93,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-
     ImageView image;
     TextView UserNameList,lastmsg;
     public ViewHolder(@NonNull View itemView) {

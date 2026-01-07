@@ -9,9 +9,6 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import com.example.connectifychattingapp.databinding.ActivitySignInBinding;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -20,7 +17,6 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,6 +39,7 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
 
         progressDialog = new ProgressDialog(SignInActivity.this);
         progressDialog.setTitle("Login");
@@ -135,6 +132,7 @@ public class SignInActivity extends AppCompatActivity {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
+                    progressDialog.dismiss();
                     if (task.isSuccessful()) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d("TAG", "signInWithCredential:success");
@@ -144,10 +142,12 @@ public class SignInActivity extends AppCompatActivity {
                         users.setUserId(user.getUid());
                         users.setusername(user.getDisplayName());
                         users.setProfilePic(user.getPhotoUrl().toString());
+                        users.setMail(user.getEmail());
                         database.getReference().child("Users").child(user.getUid()).setValue(user);
 
                         Intent intent=new Intent(SignInActivity.this, MainActivity.class);
                         startActivity(intent);
+                        finish();
                         Toast.makeText(this, "Sign in with Google", Toast.LENGTH_SHORT).show();
 //                        updateUI(user);
                     } else {

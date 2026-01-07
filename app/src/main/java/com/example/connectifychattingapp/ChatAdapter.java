@@ -1,23 +1,23 @@
 package com.example.connectifychattingapp;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-
+import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 
 public class ChatAdapter extends RecyclerView.Adapter{
-
     ArrayList<MessageModel> messageModels;
     Context context;
-
     public ChatAdapter(ArrayList<MessageModel> messageModels, Context context) {
         this.messageModels = messageModels;
         this.context = context;
@@ -34,10 +34,8 @@ public class ChatAdapter extends RecyclerView.Adapter{
         }else{
             View view= LayoutInflater.from(context).inflate(R.layout.sample_chatting_reciever,parent,false);
             return new ReceiverViewHoler(view);
-
         }
     }
-
     @Override
     public int getItemViewType(int position) {
         String msgUserId = messageModels.get(position).getuserId();
@@ -49,7 +47,6 @@ public class ChatAdapter extends RecyclerView.Adapter{
             return RECEIVER_VIEW_TYPE;
         }
     }
-
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel messageModel=messageModels.get(position);
@@ -59,16 +56,13 @@ public class ChatAdapter extends RecyclerView.Adapter{
             ((ReceiverViewHoler)holder).receiverText.setText(messageModel.getMessage());
         }
     }
-
     @Override
     public int getItemCount() {
         return messageModels.size();
     }
 
     public class ReceiverViewHoler extends RecyclerView.ViewHolder{
-
         TextView receiverText ,receiverTime;
-
         public ReceiverViewHoler(@NonNull View itemView) {
             super(itemView);
 
@@ -76,11 +70,8 @@ public class ChatAdapter extends RecyclerView.Adapter{
             receiverTime=itemView.findViewById(R.id.receiverTime);
         }
     }
-
     public class SenderViewHoler extends RecyclerView.ViewHolder{
-
         TextView senderText,senderTime;
-
         public SenderViewHoler(@NonNull View itemView) {
             super(itemView);
 
@@ -88,6 +79,4 @@ public class ChatAdapter extends RecyclerView.Adapter{
             senderTime=itemView.findViewById(R.id.senderTime);
         }
     }
-
-
 }
