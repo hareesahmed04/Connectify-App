@@ -21,7 +21,6 @@ import com.google.firebase.database.ValueEventListener;
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     FirebaseAuth auth;
-
     FirebaseDatabase database;
 
     @SuppressLint("MissingInflatedId")
@@ -81,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {}
                 });

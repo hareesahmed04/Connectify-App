@@ -80,7 +80,6 @@ public class AudioCallingActivty extends AppCompatActivity {
             endCallLocally();
         });
     }
-
     private void switchToVideo() {
         if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); mRtcEngine = null; }
         Intent intent = new Intent(this, VideoCallActivty.class);
@@ -88,7 +87,6 @@ public class AudioCallingActivty extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
     private void initAgora() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
@@ -107,7 +105,6 @@ public class AudioCallingActivty extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void endCallLocally() {
         if (mRtcEngine != null) {
             mRtcEngine.leaveChannel();
@@ -116,7 +113,6 @@ public class AudioCallingActivty extends AppCompatActivity {
         }
         finish();
     }
-
     private void saveCallLog() {
         String myId = FirebaseAuth.getInstance().getUid();
         if (myId == null) return;
@@ -129,7 +125,6 @@ public class AudioCallingActivty extends AppCompatActivity {
                 "ended",
                 new Date().getTime()
         );
-
         FirebaseDatabase.getInstance().getReference()
                 .child("Users")
                 .child(myId)

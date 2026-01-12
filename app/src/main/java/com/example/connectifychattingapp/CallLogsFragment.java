@@ -11,13 +11,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.connectifychattingapp.databinding.FragmentCallLogsBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -25,7 +23,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,21 +48,17 @@ public class CallLogsFragment extends Fragment {
 
         database = FirebaseDatabase.getInstance();
         auth = FirebaseAuth.getInstance();
-
         // 1. Initialize the list
         list = new ArrayList<>();
-
         // 2. Setup RecyclerView
         binding.callLogsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new CallLogAdapter(list);
         binding.callLogsRecyclerView.setAdapter(adapter);
-
         // 3. Fetch Data
         fetchCallLogs();
 
         return binding.getRoot();
     }
-
     private void fetchCallLogs() {
         if (auth.getUid() == null) return;
 
@@ -92,24 +85,19 @@ public class CallLogsFragment extends Fragment {
                         } else {
                             binding.tvEmptyMessage.setVisibility(View.GONE);
                         }
-
                         adapter.notifyDataSetChanged();
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {}
                 });
     }
-
     // --- MENU HANDLING ---
-
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         // Inflate your res/menu/call_log_menu.xml
         inflater.inflate(R.menu.call_log_menu, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.clear_logs) {
@@ -118,7 +106,6 @@ public class CallLogsFragment extends Fragment {
         }
         return super.onOptionsItemSelected(item);
     }
-
     private void showClearConfirmationDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Clear Logs")
@@ -129,7 +116,6 @@ public class CallLogsFragment extends Fragment {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-
     private void deleteAllLogs() {
         if (auth.getUid() != null) {
             database.getReference().child("Users")
@@ -141,12 +127,9 @@ public class CallLogsFragment extends Fragment {
                     });
         }
     }
-
     // --- ADAPTER CLASS ---
-
     public class CallLogAdapter extends RecyclerView.Adapter<CallLogAdapter.ViewHolder> {
         ArrayList<CallLogModel> list;
-
         public CallLogAdapter(ArrayList<CallLogModel> list) {
             this.list = list;
         }
@@ -184,16 +167,13 @@ public class CallLogsFragment extends Fragment {
                 holder.ivProfile.setImageResource(R.drawable.user1);
             }
         }
-
         @Override
         public int getItemCount() {
             return list.size();
         }
-
         public class ViewHolder extends RecyclerView.ViewHolder {
             ImageView ivProfile, ivCallIcon, ivVideoIcon;
             TextView tvLogName, tvLogDetails;
-
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 ivProfile = itemView.findViewById(R.id.ivProfile);

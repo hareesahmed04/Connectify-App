@@ -71,13 +71,11 @@ public class VideoCallActivty extends AppCompatActivity {
             releaseAndFinish();
         });
     }
-
     private void setupLocalVideo() {
         SurfaceView surfaceView = new SurfaceView(getBaseContext());
         binding.videoBackground.addView(surfaceView);
         mRtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
     }
-
     private void initAgora() {
         try {
             mRtcEngine = RtcEngine.create(getBaseContext(), "c25ddcb31adb4cb79078662c3205f6f9", new IRtcEngineEventHandler() {
@@ -102,7 +100,6 @@ public class VideoCallActivty extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void releaseAndFinish() {
         if (mRtcEngine != null) {
             mRtcEngine.leaveChannel();
@@ -111,7 +108,6 @@ public class VideoCallActivty extends AppCompatActivity {
         }
         finish();
     }
-
     private void saveCallLog() {
         String myId = FirebaseAuth.getInstance().getUid();
         if (myId == null) return;
@@ -124,7 +120,6 @@ public class VideoCallActivty extends AppCompatActivity {
                 "ended",
                 new Date().getTime()
         );
-
         FirebaseDatabase.getInstance().getReference()
                 .child("Users")
                 .child(myId)
