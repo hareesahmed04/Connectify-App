@@ -20,6 +20,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import android.widget.VideoView;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -53,6 +55,7 @@ public class GeminiChatActivity extends AppCompatActivity {
     private GeminiChatAdapter adapter;
     private EditText geminiPrompt;
     private Bitmap selectedBitmap = null;
+    private VideoView emptyVideoView;
 
     // UI Elements
     private RelativeLayout previewContainer;
@@ -91,6 +94,9 @@ public class GeminiChatActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.sendPrompt);
         back=findViewById(R.id.back);
         progressBar = findViewById(R.id.geminiProgressBar);
+        emptyVideoView = findViewById(R.id.emptyVideoView);
+
+        updateEmptyState();
 
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,6 +137,7 @@ public class GeminiChatActivity extends AppCompatActivity {
             if (!text.isEmpty() || selectedBitmap != null) {
                 chatList.add(new ChatMessage(text, true));
                 adapter.notifyItemInserted(chatList.size() - 1);
+                updateEmptyState();
                 recyclerView.scrollToPosition(chatList.size() - 1);
                 sendMessageToGemini(text, selectedBitmap);
                 // Clear input after sending
@@ -261,11 +268,28 @@ public class GeminiChatActivity extends AppCompatActivity {
                 .setPositiveButton("Delete", (dialog, which) -> {
                     chatList.clear();
                     adapter.notifyDataSetChanged();
-                    saveChatData(); // Update local storage
+                    saveChatData();// Update local storage
+                    updateEmptyState();
                     Toast.makeText(this, "Chat cleared", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+    private void updateEmptyState() {
+        if (chatList.isEmpty()) {
+            emptyVideoView.setVisibility(View.VISIBLE);
+
+            // Path to your video in res/raw/gemini_video.mp4
+            Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.gemini_video);
+            emptyVideoView.setVideoURI(videoUri);
+
+            // Loop the video
+            emptyVideoView.setOnPreparedListener(mp -> mp.setLooping(true));
+            emptyVideoView.start();
+        } else {
+            emptyVideoView.stopPlayback();
+            emptyVideoView.setVisibility(View.GONE);
+        }
     }
     private void hideKeyboard() {
         View view = this.getCurrentFocus();

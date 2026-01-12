@@ -8,10 +8,17 @@ plugins {
 
 android {
     namespace = "com.example.connectifychattingapp"
-    compileSdk {
-        version = release(36)
-    }
 
+    // Fixed: Standard integer for SDK version
+    compileSdk = 36
+
+    // Fixed: Packaging options MUST be here to fix the 16 KB error
+    packaging {
+        jniLibs {
+            // This aligns Agora's .so files to 16 KB boundaries
+            useLegacyPackaging = false
+        }
+    }
     defaultConfig {
         applicationId = "com.example.connectifychattingapp"
         minSdk = 26
@@ -33,6 +40,14 @@ android {
 
         // Generate the BuildConfig field
         buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
+
+        externalNativeBuild {
+            cmake {
+                // This is the critical flag for 16 KB support
+                arguments("-DANDROID_EXTRACT_NATIVE_LIBS=FALSE")
+                cppFlags("-Wl,-z,max-page-size=16384")
+            }
+        }
     }
 
 
@@ -80,4 +95,5 @@ dependencies {
     implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
     // Async support for Java
     implementation("com.google.guava:guava:31.1-android")
+    implementation("io.agora.rtc:full-sdk:4.6.1")
 }

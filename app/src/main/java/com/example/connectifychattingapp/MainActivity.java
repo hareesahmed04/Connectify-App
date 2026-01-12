@@ -13,10 +13,16 @@ import androidx.viewpager.widget.ViewPager;
 import com.example.connectifychattingapp.databinding.ActivityMainBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     FirebaseAuth auth;
+
+    FirebaseDatabase database;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -28,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
 
         auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
 
         if (auth.getCurrentUser() == null) {
             Intent intent = new Intent(MainActivity.this, SignInActivity.class);
@@ -53,7 +60,31 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+        // --- INCOMING CALL LISTENER ---
+        database.getReference().child("calls").child(auth.getUid())
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            String status = snapshot.child("status").getValue(String.class);
 
+                            // Only trigger if the status is "ringing"
+                            if ("ringing".equals(status)) {
+                                String callerName = snapshot.child("callerName").getValue(String.class);
+                                String callerId = snapshot.child("callerId").getValue(String.class);
+                                String channelId = snapshot.child("channelId").getValue(String.class);
+                                String type = snapshot.child("type").getValue(String.class);
+                                String profilePic = snapshot.child("callerPic").getValue(String.class);
+
+                                // Launch the appropriate incoming screen
+                                launchIncomingScreen(type, callerName, callerId, channelId, profilePic);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
     binding.viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -100,4 +131,21 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+    private void launchIncomingScreen(String type, String name, String id, String channel, String profilePic) {
+        Intent intent;
+        if ("video".equals(type)) {
+            intent = new Intent(MainActivity.this, VideoCallIncomingActivity.class);
+        } else {
+            intent = new Intent(MainActivity.this, AudioIncomingActivity.class);
+        }
+        intent.putExtra("callerName", name);
+        intent.putExtra("callerId", id);
+        intent.putExtra("channelId", channel);
+        intent.putExtra("profilePic", profilePic);
+
+        // This flag is critical for launching from a background listener
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
 }
+

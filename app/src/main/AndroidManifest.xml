@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -7,6 +8,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -21,46 +24,50 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ConnectifyChattingApp">
-
+        <activity
+            android:name=".VideoCallIncomingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AudioIncomingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VideoCallActivty"
+            android:exported="false" />
+        <activity
+            android:name=".AudioCallingActivty"
+            android:exported="false" />
         <activity
             android:name=".SplashScreen"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/Theme.ConnectifyChattingApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".GeminiChatActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-
         <activity
             android:name=".Accounts_Profile_Activity"
             android:exported="false" />
-
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
-
         <activity
             android:name=".AddContactActivity"
             android:exported="false" />
-
         <activity
             android:name=".ChatDetailActivity"
             android:exported="false" />
-
         <activity
             android:name=".SignInActivity"
             android:exported="false" />
-
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
         <activity
             android:name=".SignUpActivity"
             android:exported="false">
@@ -68,7 +75,6 @@
                 <action android:name="android.media.action.IMAGE_CAPTURE" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

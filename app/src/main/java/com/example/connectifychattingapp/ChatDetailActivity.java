@@ -22,14 +22,15 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class ChatDetailActivity extends AppCompatActivity {
     ActivityChatDetailBinding binding;
     FirebaseDatabase database;
     FirebaseAuth auth;
-    String receiverId;
     ArrayList<MessageModel> messageModels;
     ChatAdapter chatAdapter;
+    String receiverId, senderId, receiverName, receiverProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,18 +44,33 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         final String senderId=auth.getUid();
 
-        receiverId=getIntent().getStringExtra("userId");
-        String userName=getIntent().getStringExtra("userName");
-        String profilePic=getIntent().getStringExtra("profilePic");
-
-        binding.userNameChats.setText(userName);
-        Picasso.get().load(profilePic).placeholder(R.drawable.user1).into(binding.profileImage);
+        receiverId = getIntent().getStringExtra("userId");
+        receiverName = getIntent().getStringExtra("userName");
+        receiverProfile = getIntent().getStringExtra("profilePic");
+        binding.userNameChats.setText(receiverName);
+        Picasso.get().load(receiverProfile).placeholder(R.drawable.user1).into(binding.profileImage);
 
         binding.backArrow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(ChatDetailActivity.this, MainActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        // --- Video Call Button Logic ---
+        binding.btnVideoCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initiateCall("video");
+            }
+        });
+
+        // --- Audio Call Button Logic ---
+        binding.btnCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initiateCall("audio");
             }
         });
           messageModels=new ArrayList<>();
@@ -160,5 +176,40 @@ public class ChatDetailActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+    private void initiateCall(String type) {
+        // Create a unique channel ID for Agora
+        String channelId = senderId + "_" + receiverId + "_" + System.currentTimeMillis();
+
+        // Prepare data for the receiver to listen to
+        HashMap<String, Object> callData = new HashMap<>();
+        callData.put("callerId", senderId);
+        callData.put("callerName", "Friend"); // Ideally pass your own name from user data
+        callData.put("callerPic", "");      // Pass your own profile pic URL
+        callData.put("type", type);
+        callData.put("channelId", channelId);
+        callData.put("status", "ringing");
+
+        // Notify receiver via Firebase "calls" node
+        database.getReference().child("calls").child(receiverId).setValue(callData)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        // Launch the caller's interface
+                        Intent intent;
+                        if ("video".equals(type)) {
+                            intent = new Intent(ChatDetailActivity.this, VideoCallActivty.class);
+                        } else {
+                            intent = new Intent(ChatDetailActivity.this, AudioCallingActivty.class);
+                        }
+
+                        intent.putExtra("channelId", channelId);
+                        intent.putExtra("isCaller", true);
+                        intent.putExtra("remoteUserId", receiverId);
+                        intent.putExtra("remoteUserName", receiverName);
+                        intent.putExtra("remoteUserProfile", receiverProfile);
+                        startActivity(intent);
+                    }
+                });
     }
 }
