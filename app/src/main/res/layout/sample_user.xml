@@ -32,6 +32,7 @@
             android:paddingBottom="5dp"
             android:layout_marginLeft="5dp"
             android:text="User Name"
+            android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -41,8 +42,10 @@
             android:layout_height="wrap_content"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
+            android:paddingRight="2dp"
             android:layout_marginLeft="5dp"
-            android:text="Last Mesaage" />
+            android:text="Last Mesaage"
+            android:textColor="@color/black"/>
     </LinearLayout>
 
 

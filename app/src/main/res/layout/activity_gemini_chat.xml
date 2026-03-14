@@ -14,7 +14,8 @@
         android:background="#1E88E5"
         app:title="Gemini AI"
         app:titleTextColor="@color/white"
-        >
+        android:fitsSystemWindows="true">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -25,6 +26,7 @@
             android:layout_width="35dp"
             android:layout_height="wrap_content"
             android:src="@drawable/back_arrow"
+            android:paddingRight="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -35,6 +37,7 @@
             android:id="@+id/textView"
             android:layout_width="149dp"
             android:layout_height="match_parent"
+            android:layout_marginStart="12dp"
             android:gravity="center"
             android:text="Gemini AI "
             android:textColor="@color/white"
@@ -104,6 +107,8 @@
                 android:background="@android:color/transparent"
                 android:hint="Ask Gemini..."
                 android:inputType="textShortMessage"
+                android:textCursorDrawable="@null"
+                android:textColor="@color/black"
                 android:minHeight="45dp"
                 android:padding="10dp"
                 android:textColorHint="#99000000" />

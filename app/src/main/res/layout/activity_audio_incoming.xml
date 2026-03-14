@@ -30,11 +30,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_caller_name" />
 
-    <View
+    <ImageView
         android:id="@+id/profile_image"
         android:layout_width="140dp"
         android:layout_height="140dp"
         android:background="@drawable/circle_shape"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder"
         app:layout_constraintBottom_toTopOf="@+id/guideline_bottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

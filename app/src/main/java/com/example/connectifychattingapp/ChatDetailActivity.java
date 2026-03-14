@@ -11,6 +11,9 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.connectifychattingapp.databinding.ActivityChatDetailBinding;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -38,6 +41,18 @@ public class ChatDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         binding =ActivityChatDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        // Set the status bar background to black
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+
+        // Ensure the icons are white/light so they are visible on the black background
+        WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        windowInsetsController.setAppearanceLightStatusBars(false);
+
+        // 2. Navigation Bar Setup (Black background, white icons)
+        getWindow().setNavigationBarColor(ContextCompat.getColor(this, R.color.black));
+        windowInsetsController.setAppearanceLightNavigationBars(false);
+
 
         database=FirebaseDatabase.getInstance();
         auth=FirebaseAuth.getInstance();
@@ -152,21 +167,20 @@ public class ChatDetailActivity extends AppCompatActivity {
         });
     }
     private void showClearChatDialog(String senderRoom) {
-        new AlertDialog.Builder(this)
-                .setTitle("Clear Chat")
-                .setMessage("This will delete all messages in this conversation. The user will remain in your chat list.")
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clear Chat")
+                .setMessage("This will delete all messages in this conversation.")
                 .setPositiveButton("Clear", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
-                        // 1. Delete messages from Firebase for the current user (senderRoom)
+                        // 1. Delete messages from Firebase
                         database.getReference().child("chats")
                                 .child(senderRoom)
                                 .removeValue()
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
-                                        // 2. Clear the local list so the UI updates immediately
+                                        // 2. Clear the local list
                                         messageModels.clear();
                                         chatAdapter.notifyDataSetChanged();
                                         Toast.makeText(ChatDetailActivity.this, "Chat cleared", Toast.LENGTH_SHORT).show();
@@ -174,41 +188,64 @@ public class ChatDetailActivity extends AppCompatActivity {
                                 });
                     }
                 })
-                .setNegativeButton("Cancel", null)
-                .show();
+                .setNegativeButton("Cancel", null);
+        AlertDialog dialog = builder.create();
+
+        // 2. Show it
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.blue));
+
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, android.R.color.black));
     }
     private void initiateCall(String type) {
-        // Create a unique channel ID for Agora
-        String channelId = senderId + "_" + receiverId + "_" + System.currentTimeMillis();
+        String senderId = FirebaseAuth.getInstance().getUid();
+        String channelId = senderId + "_" + receiverId;
 
-        // Prepare data for the receiver to listen to
-        HashMap<String, Object> callData = new HashMap<>();
-        callData.put("callerId", senderId);
-        callData.put("callerName", "Friend"); // Ideally pass your own name from user data
-        callData.put("callerPic", "");      // Pass your own profile pic URL
-        callData.put("type", type);
-        callData.put("channelId", channelId);
-        callData.put("status", "ringing");
-
-        // Notify receiver via Firebase "calls" node
-        database.getReference().child("calls").child(receiverId).setValue(callData)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
+        // 1. Fetch CURRENT user's data (The Caller)
+        database.getReference().child("Users").child(senderId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onSuccess(Void unused) {
-                        // Launch the caller's interface
-                        Intent intent;
-                        if ("video".equals(type)) {
-                            intent = new Intent(ChatDetailActivity.this, VideoCallActivty.class);
-                        } else {
-                            intent = new Intent(ChatDetailActivity.this, AudioCallingActivty.class);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // Get actual name and pic from the snapshot
+                        String myRealName = snapshot.child("userName").getValue(String.class);
+                        String myRealProfile = snapshot.child("profilePic").getValue(String.class);
 
-                        intent.putExtra("channelId", channelId);
-                        intent.putExtra("isCaller", true);
-                        intent.putExtra("remoteUserId", receiverId);
-                        intent.putExtra("remoteUserName", receiverName);
-                        intent.putExtra("remoteUserProfile", receiverProfile);
-                        startActivity(intent);
+                        // Default to "User" only if the database name is actually empty
+                        if (myRealName == null || myRealName.isEmpty()) myRealName = "Connectify User";
+
+                        HashMap<String, Object> callData = new HashMap<>();
+                        callData.put("callerId", senderId);
+                        callData.put("callerName", myRealName); // This will now be the real name
+                        callData.put("callerPic", myRealProfile != null ? myRealProfile : "");
+                        callData.put("type", type);
+                        callData.put("channelId", channelId);
+                        callData.put("status", "ringing");
+
+                        // 2. Only after we have the name, notify the receiver
+                        database.getReference().child("calls").child(receiverId).setValue(callData)
+                                .addOnSuccessListener(unused -> {
+                                    Intent intent;
+                                    if ("video".equals(type)) {
+                                        intent = new Intent(ChatDetailActivity.this, VideoCallActivty.class);
+                                    } else {
+                                        intent = new Intent(ChatDetailActivity.this, AudioCallingActivty.class);
+                                    }
+
+                                    // CALLER sees RECEIVER'S info
+                                    intent.putExtra("channelId", channelId);
+                                    intent.putExtra("isCaller", true);
+                                    intent.putExtra("remoteUserId", receiverId);
+                                    intent.putExtra("remoteUserName", receiverName);
+                                    intent.putExtra("remoteUserProfile", receiverProfile);
+                                    startActivity(intent);
+                                });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(ChatDetailActivity.this, "Call failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }

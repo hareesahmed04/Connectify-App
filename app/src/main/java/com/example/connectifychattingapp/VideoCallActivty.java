@@ -2,6 +2,7 @@ package com.example.connectifychattingapp;
 
 import android.os.Bundle;
 import android.view.SurfaceView;
+import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.connectifychattingapp.databinding.ActivityVideoCallActivtyBinding;
@@ -12,14 +13,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
+import io.agora.rtc2.RtcEngineConfig;
 import io.agora.rtc2.video.VideoCanvas;
-import java.util.Date;
 
 public class VideoCallActivty extends AppCompatActivity {
     ActivityVideoCallActivtyBinding binding;
     private RtcEngine mRtcEngine;
-    String channelId, remoteUserId, remoteUserName, remoteUserProfile;
-    boolean isCaller, isMuted = false, isSpeakerOn = true;
+    String channelId, remoteUserId, remoteUserName, nodePath;
+    boolean isCaller;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,103 +29,69 @@ public class VideoCallActivty extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         channelId = getIntent().getStringExtra("channelId");
-        isCaller = getIntent().getBooleanExtra("isCaller", false);
         remoteUserId = getIntent().getStringExtra("remoteUserId");
         remoteUserName = getIntent().getStringExtra("remoteUserName");
-        remoteUserProfile = getIntent().getStringExtra("remoteUserProfile");
+        isCaller = getIntent().getBooleanExtra("isCaller", false);
+        nodePath = isCaller ? remoteUserId : FirebaseAuth.getInstance().getUid();
 
-        initAgora();
-        setupLocalVideo();
-        mRtcEngine.joinChannel(null, channelId, "", 0);
-
-        binding.btnMute.setOnClickListener(v -> {
-            isMuted = !isMuted;
-            mRtcEngine.muteLocalAudioStream(isMuted);
-            binding.btnMute.setAlpha(isMuted ? 0.5f : 1.0f);
-        });
-
-        binding.btnSpeaker.setOnClickListener(v -> {
-            isSpeakerOn = !isSpeakerOn;
-            mRtcEngine.setEnableSpeakerphone(isSpeakerOn);
-            binding.btnSpeaker.setAlpha(isSpeakerOn ? 1.0f : 0.5f);
-        });
-
-        String nodePath = isCaller ? remoteUserId : FirebaseAuth.getInstance().getUid();
-
-        // SYNC LISTENER
-        FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) {
-                            saveCallLog();
-                            releaseAndFinish();
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
+        binding.tvName.setText(remoteUserName);
+        initAgoraAndJoin();
 
         binding.btnEndCall.setOnClickListener(v -> {
             FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath).removeValue();
-            saveCallLog();
             releaseAndFinish();
         });
+
+        binding.btnSwitchCamera.setOnClickListener(v -> {
+            if (mRtcEngine != null) mRtcEngine.switchCamera();
+        });
+
+        FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) { if (!snapshot.exists()) releaseAndFinish(); }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
     }
-    private void setupLocalVideo() {
-        SurfaceView surfaceView = new SurfaceView(getBaseContext());
-        binding.videoBackground.addView(surfaceView);
-        mRtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
-    }
-    private void initAgora() {
+
+    private void initAgoraAndJoin() {
         try {
-            mRtcEngine = RtcEngine.create(getBaseContext(), "c25ddcb31adb4cb79078662c3205f6f9", new IRtcEngineEventHandler() {
+            RtcEngineConfig config = new RtcEngineConfig();
+            config.mContext = getBaseContext();
+            config.mAppId = "e9a90ec5b39546e4a5b41f585c42ebf4";
+            config.mEventHandler = new IRtcEngineEventHandler() {
                 @Override
                 public void onUserJoined(int uid, int elapsed) {
-                    runOnUiThread(() -> {
-                        SurfaceView surfaceView = new SurfaceView(getBaseContext());
-                        binding.videoBackground.addView(surfaceView);
-                        mRtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
-                    });
+                    runOnUiThread(() -> setupRemoteVideo(uid));
                 }
                 @Override
-                public void onUserOffline(int uid, int reason) {
-                    runOnUiThread(() -> {
-                        saveCallLog();
-                        releaseAndFinish();
-                    });
-                }
-            });
+                public void onUserOffline(int uid, int reason) { runOnUiThread(() -> releaseAndFinish()); }
+            };
+            mRtcEngine = RtcEngine.create(config);
             mRtcEngine.enableVideo();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            mRtcEngine.setEnableSpeakerphone(true);
+            setupLocalVideo();
+            mRtcEngine.joinChannel(null, channelId, "", 0);
+        } catch (Exception e) { e.printStackTrace(); }
     }
-    private void releaseAndFinish() {
-        if (mRtcEngine != null) {
-            mRtcEngine.leaveChannel();
-            RtcEngine.destroy();
-            mRtcEngine = null;
-        }
-        finish();
-    }
-    private void saveCallLog() {
-        String myId = FirebaseAuth.getInstance().getUid();
-        if (myId == null) return;
 
-        CallLogModel log = new CallLogModel(
-                remoteUserId,
-                remoteUserName != null ? remoteUserName : "Unknown User",
-                remoteUserProfile != null ? remoteUserProfile : "",
-                "video",
-                "ended",
-                new Date().getTime()
-        );
-        FirebaseDatabase.getInstance().getReference()
-                .child("Users")
-                .child(myId)
-                .child("CallLogs")
-                .push()
-                .setValue(log);
+    private void setupLocalVideo() {
+        SurfaceView surfaceView = new SurfaceView(getBaseContext());
+        surfaceView.setZOrderMediaOverlay(true);
+        binding.localVideoViewContainer.addView(surfaceView);
+        mRtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
+    }
+
+    private void setupRemoteVideo(int uid) {
+        if (binding.remoteVideoViewContainer.getChildCount() > 0) binding.remoteVideoViewContainer.removeAllViews();
+        SurfaceView surfaceView = new SurfaceView(getBaseContext());
+        binding.remoteVideoViewContainer.addView(surfaceView);
+        mRtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
+    }
+
+    private void releaseAndFinish() {
+        if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); }
+        finish();
     }
 }

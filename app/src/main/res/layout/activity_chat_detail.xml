@@ -6,36 +6,36 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/chat_background"
+    android:fitsSystemWindows="true"
+    android:background="@android:color/black"
     tools:context=".ChatDetailActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="65dp"
         android:background="#1E88E5"
+        android:elevation="4dp"
         app:contentInsetStart="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
             <ImageView
                 android:id="@+id/backArrow"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.529"
                 app:srcCompat="@drawable/back_arrow"
                 app:tint="@color/white" />
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/profileImage"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/user1"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -44,14 +44,16 @@
 
             <TextView
                 android:id="@+id/userNameChats"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="User Name"
+                android:layout_marginEnd="8dp"
+                android:text="Huzaifa Ahmed"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btnVideoCall"
                 app:layout_constraintStart_toEndOf="@+id/profileImage"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -59,7 +61,7 @@
                 android:id="@+id/btnMenu"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="12dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -70,7 +72,7 @@
                 android:id="@+id/btnCall"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btnMenu"
                 app:layout_constraintTop_toTopOf="parent"
@@ -81,68 +83,66 @@
                 android:id="@+id/btnVideoCall"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btnCall"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/video_call"
                 app:tint="@color/white" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <LinearLayout
-        android:id="@+id/msgBox"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:background="@drawable/chat_background">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chatRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/msgBox"
+            android:clipToPadding="false"
+            android:padding="8dp"
+            app:stackFromEnd="true"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/msgBox"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/edit_text_style"
-            android:elevation="2dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/transparent"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingEnd="8dp">
+            android:padding="8dp">
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/etMessage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
+                android:background="@drawable/edit_text_style"
                 android:hint="Message"
-                android:inputType="textShortMessage"
-                android:minHeight="45dp"
-                android:padding="10dp"
-                android:textColorHint="#99000000" />
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
+                android:textCursorDrawable="@null"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:elevation="2dp"/>
 
+            <ImageView
+                android:id="@+id/btnSend"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/circle_blue_bg"
+                android:padding="12dp"
+                android:src="@drawable/send"
+                app:tint="@color/white"
+                android:elevation="2dp"/>
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/btnSend"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/circle_blue_bg"
-            android:padding="12dp"
-            android:src="@drawable/send"
-            app:tint="@color/white" />
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chatRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/msgBox"
-        android:layout_below="@id/toolbar"
-        android:clipToPadding="false"
-        android:paddingBottom="4dp" />
+    </RelativeLayout>
 
 </RelativeLayout>

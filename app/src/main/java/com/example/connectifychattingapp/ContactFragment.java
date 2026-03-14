@@ -7,6 +7,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -173,15 +174,26 @@ public class ContactFragment extends Fragment {
         }
     };
     private void showDeleteDialog() {
-        new AlertDialog.Builder(getContext())
-                .setTitle("Delete Contact")
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        builder.setTitle("Delete Contact")
                 .setMessage("Are you sure you want to delete selected contacts?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                        deleteFromFirebase();
-                    actionMode.finish();
+                    deleteFromFirebase();
+                    if (actionMode != null) {
+                        actionMode.finish();
+                    }
                 })
-                .setNegativeButton("Cancel", null)
-                .show();
+                .setNegativeButton("Cancel", null);
+
+        // 1. Create the dialog object
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(getContext(), R.color.blue));
+
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(getContext(), android.R.color.black));
     }
     private void deleteFromFirebase() {
         String currentUid = auth.getUid();

@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.speech.RecognizerIntent;
@@ -26,6 +27,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.ai.client.generativeai.GenerativeModel;
@@ -70,6 +73,14 @@ public class GeminiChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gemini_chat);
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        getWindow().setNavigationBarColor(ContextCompat.getColor(this, R.color.black));
+        windowInsetsController.setAppearanceLightNavigationBars(false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        }
 
         loadChatData();
 
@@ -262,18 +273,26 @@ public class GeminiChatActivity extends AppCompatActivity {
         saveChatData(); // Save chat when user leaves the activity
     }
     private void showClearChatDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Clear Chat")
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Clear Chat")
                 .setMessage("Are you sure you want to delete this chat")
                 .setPositiveButton("Delete", (dialog, which) -> {
                     chatList.clear();
                     adapter.notifyDataSetChanged();
-                    saveChatData();// Update local storage
+                    saveChatData(); // Update local storage
                     updateEmptyState();
                     Toast.makeText(this, "Chat cleared", Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Cancel", null)
-                .show();
+                .setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.blue));
+
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, android.R.color.black));
     }
     private void updateEmptyState() {
         if (chatList.isEmpty()) {

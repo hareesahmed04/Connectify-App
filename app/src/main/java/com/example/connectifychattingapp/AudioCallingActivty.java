@@ -1,7 +1,10 @@
 package com.example.connectifychattingapp;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.connectifychattingapp.databinding.ActivityAudioCallingActivtyBinding;
@@ -13,13 +16,15 @@ import com.google.firebase.database.ValueEventListener;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.RtcEngineConfig;
-import java.util.Date;
 
 public class AudioCallingActivty extends AppCompatActivity {
     ActivityAudioCallingActivtyBinding binding;
     private RtcEngine mRtcEngine;
-    String channelId, remoteUserId, remoteUserName, remoteUserProfile;
-    boolean isCaller, isMuted = false, isSpeakerOn = true;
+    String channelId, remoteUserId, remoteUserName, nodePath;
+    boolean isCaller, isMuted = false, isSpeakerOn = false;
+    private MediaPlayer bellPlayer;
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private Runnable timeoutRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,34 +32,22 @@ public class AudioCallingActivty extends AppCompatActivity {
         binding = ActivityAudioCallingActivtyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Get Data from Intent
         channelId = getIntent().getStringExtra("channelId");
         isCaller = getIntent().getBooleanExtra("isCaller", false);
         remoteUserId = getIntent().getStringExtra("remoteUserId");
         remoteUserName = getIntent().getStringExtra("remoteUserName");
-        remoteUserProfile = getIntent().getStringExtra("remoteUserProfile");
+        nodePath = isCaller ? remoteUserId : FirebaseAuth.getInstance().getUid();
+
+        binding.tvName.setText(remoteUserName);
+        if (isCaller) { playCallingBell(); startTimeoutTimer(); }
 
         initAgora();
-        mRtcEngine.joinChannel(null, channelId, "", 0);
+        setupFirebaseSync();
 
-        String nodePath = isCaller ? remoteUserId : FirebaseAuth.getInstance().getUid();
-
-        // SYNC: End call for both or Switch to Video
-        FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) {
-                            // Remote user ended the call
-                            saveCallLog();
-                            endCallLocally();
-                        } else if ("video".equals(snapshot.child("type").getValue(String.class))) {
-                            switchToVideo();
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
+        binding.btnEndCall.setOnClickListener(v -> {
+            FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath).removeValue();
+            releaseAndFinish();
+        });
 
         binding.btnMute.setOnClickListener(v -> {
             isMuted = !isMuted;
@@ -69,67 +62,66 @@ public class AudioCallingActivty extends AppCompatActivity {
         });
 
         binding.btnVideo.setOnClickListener(v -> {
-            FirebaseDatabase.getInstance().getReference().child("calls")
-                    .child(nodePath).child("type").setValue("video");
+            FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath).child("type").setValue("video");
+            navigateToVideo();
         });
+    }
 
-        binding.btnEndCall.setOnClickListener(v -> {
-            // User manually ended the call
+    private void startTimeoutTimer() {
+        timeoutRunnable = () -> {
             FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath).removeValue();
-            saveCallLog();
-            endCallLocally();
-        });
+            releaseAndFinish();
+        };
+        timeoutHandler.postDelayed(timeoutRunnable, 60000);
     }
-    private void switchToVideo() {
-        if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); mRtcEngine = null; }
-        Intent intent = new Intent(this, VideoCallActivty.class);
-        intent.putExtras(getIntent().getExtras());
-        startActivity(intent);
-        finish();
-    }
+
     private void initAgora() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
             config.mContext = getBaseContext();
-            config.mAppId = "c25ddcb31adb4cb79078662c3205f6f9";
+            config.mAppId = "e9a90ec5b39546e4a5b41f585c42ebf4";
             config.mEventHandler = new IRtcEngineEventHandler() {
-                @Override public void onUserOffline(int uid, int reason) {
+                @Override
+                public void onUserJoined(int uid, int elapsed) {
                     runOnUiThread(() -> {
-                        saveCallLog();
-                        endCallLocally();
+                        timeoutHandler.removeCallbacks(timeoutRunnable);
+                        stopRingtone();
+                        binding.tvStatus.setText("Connected");
                     });
                 }
+                @Override
+                public void onUserOffline(int uid, int reason) { runOnUiThread(() -> releaseAndFinish()); }
             };
             mRtcEngine = RtcEngine.create(config);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            mRtcEngine.enableAudio();
+            mRtcEngine.joinChannel(null, channelId, "", 0);
+        } catch (Exception e) { e.printStackTrace(); }
     }
-    private void endCallLocally() {
-        if (mRtcEngine != null) {
-            mRtcEngine.leaveChannel();
-            RtcEngine.destroy();
-            mRtcEngine = null;
-        }
-        finish();
-    }
-    private void saveCallLog() {
-        String myId = FirebaseAuth.getInstance().getUid();
-        if (myId == null) return;
 
-        CallLogModel log = new CallLogModel(
-                remoteUserId,
-                remoteUserName != null ? remoteUserName : "Unknown User",
-                remoteUserProfile != null ? remoteUserProfile : "",
-                "audio",
-                "ended",
-                new Date().getTime()
-        );
-        FirebaseDatabase.getInstance().getReference()
-                .child("Users")
-                .child(myId)
-                .child("CallLogs")
-                .push()
-                .setValue(log);
+    private void setupFirebaseSync() {
+        FirebaseDatabase.getInstance().getReference().child("calls").child(nodePath)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!snapshot.exists()) releaseAndFinish();
+                        else if ("video".equals(snapshot.child("type").getValue(String.class))) navigateToVideo();
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
     }
+
+    private void navigateToVideo() {
+        Intent intent = new Intent(this, VideoCallActivty.class);
+        intent.putExtra("channelId", channelId);
+        intent.putExtra("remoteUserId", remoteUserId);
+        intent.putExtra("remoteUserName", remoteUserName);
+        intent.putExtra("isCaller", isCaller);
+        startActivity(intent);
+        releaseAndFinish();
+    }
+
+    private void playCallingBell() { bellPlayer = MediaPlayer.create(this, R.raw.ringtone); bellPlayer.setLooping(true); bellPlayer.start(); }
+    private void stopRingtone() { if (bellPlayer != null) { bellPlayer.stop(); bellPlayer.release(); bellPlayer = null; } }
+    private void releaseAndFinish() { stopRingtone(); timeoutHandler.removeCallbacks(timeoutRunnable); if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); } finish(); }
 }

@@ -1,9 +1,13 @@
 package com.example.connectifychattingapp;
 
+import com.google.firebase.database.Exclude;
+
 public class CallLogModel {
     private String userId, userName, profilePic, callType, callStatus, callId;
     private long timestamp;
-    public CallLogModel() {} // Required for Firebase
+    private boolean isSelected = false;
+
+    public CallLogModel() {}
 
     public CallLogModel(String userId, String userName, String profilePic, String callType, String callStatus, long timestamp) {
         this.userId = userId;
@@ -14,19 +18,29 @@ public class CallLogModel {
         this.timestamp = timestamp;
     }
 
-    // Getters and Setters
+    @Exclude
+    public boolean isSelected() { return isSelected; }
+    @Exclude
+    public void setSelected(boolean selected) { isSelected = selected; }
+
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
+
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
+
     public String getProfilePic() { return profilePic; }
     public void setProfilePic(String profilePic) { this.profilePic = profilePic; }
+
     public String getCallType() { return callType; }
     public void setCallType(String callType) { this.callType = callType; }
+
     public String getCallStatus() { return callStatus; }
     public void setCallStatus(String callStatus) { this.callStatus = callStatus; }
+
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+
     public String getCallId() { return callId; }
     public void setCallId(String callId) { this.callId = callId; }
 }

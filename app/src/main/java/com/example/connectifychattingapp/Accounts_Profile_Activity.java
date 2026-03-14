@@ -3,6 +3,7 @@ package com.example.connectifychattingapp;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import com.example.connectifychattingapp.databinding.ActivityAccountsProfileBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -32,45 +37,40 @@ public class Accounts_Profile_Activity extends AppCompatActivity {
         binding = ActivityAccountsProfileBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        getWindow().setNavigationBarColor(ContextCompat.getColor(this, R.color.black));
+        windowInsetsController.setAppearanceLightNavigationBars(false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        }
+
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
 
         // 1. Load Data from Firebase initially
         loadUserData();
+
         // 2. Pencil Click: Enable First Name field
         binding.editFirstName.setOnClickListener(v -> {
             binding.etFirstName.setEnabled(true);
             binding.etFirstName.requestFocus();
             showKeyboard(binding.etFirstName);
         });
+
         // 3. Password Pencil: Trigger secure Dialog
-        binding.editPassword.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                showPasswordDialog();
-            }
-        });
+        binding.editPassword.setOnClickListener(v -> showPasswordDialog());
+
         // 4. Save Button: Update Firebase
-        binding.btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateProfile();
-            }
-        });
-        binding.btnDeleteAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDeleteAccountDialog();
-            }
-        });
+        binding.btnSave.setOnClickListener(v -> updateProfile());
+
+        // 5. Delete Account
+        binding.btnDeleteAccount.setOnClickListener(v -> showDeleteAccountDialog());
+
         // Back Navigation
-        binding.btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        binding.btnBack.setOnClickListener(v -> finish());
     }
+
     private void loadUserData() {
         database.getReference().child("Users").child(auth.getUid())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -94,12 +94,14 @@ public class Accounts_Profile_Activity extends AppCompatActivity {
                             }
                         }
                     }
+
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(Accounts_Profile_Activity.this, "Failed to load data", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
     private void updateProfile() {
         String updatedName = binding.etFirstName.getText().toString();
         if (updatedName.isEmpty()) {
@@ -118,6 +120,7 @@ public class Accounts_Profile_Activity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Update Failed", Toast.LENGTH_SHORT).show());
     }
+
     private void showPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = LayoutInflater.from(this).inflate(R.layout.layout_password_dialog, null);
@@ -145,43 +148,69 @@ public class Accounts_Profile_Activity extends AppCompatActivity {
                 Toast.makeText(this, "Incorrect Current Password", Toast.LENGTH_SHORT).show();
             }
         });
+
         builder.setNegativeButton("Cancel", null);
-        builder.create().show();
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        // Set button colors
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.blue));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, android.R.color.black));
     }
+
     private void showKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
         }
     }
+
     // Method to show verification dialog for deletion
     private void showDeleteAccountDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = LayoutInflater.from(this).inflate(R.layout.layout_password_dialog, null);
         builder.setView(dialogView);
 
-        // Customize the dialog UI for deletion
+        // 1. Find the input fields
         EditText etConfirmPass = dialogView.findViewById(R.id.oldPass);
         EditText etNewPass = dialogView.findViewById(R.id.newPass);
 
-        // We don't need the "New Password" field for deletion
-        etNewPass.setVisibility(View.GONE);
-        etConfirmPass.setHint("Enter Password to Confirm Deletion");
+        // 2. Hide the "New Password" field as we only need to verify the current one
+        if (etNewPass != null) {
+            etNewPass.setVisibility(View.GONE);
+        }
+
+        // 3. Configure the remaining input field
+        etConfirmPass.setHint("Enter Password");
+        etConfirmPass.setText("");
 
         builder.setTitle("Delete Account Permanently?")
                 .setMessage("This action cannot be undone. All your data will be erased.")
-                .setPositiveButton("DELETE", (dialog, which) -> {
-                    String inputPass = etConfirmPass.getText().toString();
+                .setCancelable(true);
 
-                    if (inputPass.equals(dbPassword)) {
-                        deleteUserPermanently();
-                    } else {
-                        Toast.makeText(this, "Incorrect Password!", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        builder.setPositiveButton("DELETE", (dialog, which) -> {
+            String inputPass = etConfirmPass.getText().toString().trim();
+            if (inputPass.equals(dbPassword)) {
+                deleteUserPermanently();
+            } else {
+                Toast.makeText(this, "Incorrect Password!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("CANCEL", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // 4. Button Colors (Red for delete, Black for cancel)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, android.R.color.black));
     }
+
     private void deleteUserPermanently() {
         String uid = auth.getUid();
 

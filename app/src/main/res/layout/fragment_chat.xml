@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
         android:background="@drawable/search_bg"
+        android:textCursorDrawable="@null"
         app:iconifiedByDefault="false"
         app:queryHint="Search chats..."
         app:queryBackground="@android:color/transparent" />
@@ -37,6 +38,7 @@
             android:layout_margin="24dp"
             app:backgroundTint="@color/white"
             app:srcCompat="@drawable/gemini1"
+            android:outlineAmbientShadowColor="@color/black"
             app:tint="@null"
             app:elevation="6dp" />
         <TextView

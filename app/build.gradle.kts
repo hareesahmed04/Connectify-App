@@ -9,16 +9,8 @@ plugins {
 android {
     namespace = "com.example.connectifychattingapp"
 
-    // Fixed: Standard integer for SDK version
     compileSdk = 36
 
-    // Fixed: Packaging options MUST be here to fix the 16 KB error
-    packaging {
-        jniLibs {
-            // This aligns Agora's .so files to 16 KB boundaries
-            useLegacyPackaging = false
-        }
-    }
     defaultConfig {
         applicationId = "com.example.connectifychattingapp"
         minSdk = 26
@@ -29,7 +21,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // --- API KEY CONFIGURATION ---
-        // This reads the key from local.properties safely
         val localProperties = Properties()
         val localPropertiesFile = rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {
@@ -37,19 +28,23 @@ android {
         }
 
         val apiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
-
-        // Generate the BuildConfig field
         buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
 
         externalNativeBuild {
             cmake {
-                // This is the critical flag for 16 KB support
+                // Critical flags for 16 KB page size support (Agora)
                 arguments("-DANDROID_EXTRACT_NATIVE_LIBS=FALSE")
                 cppFlags("-Wl,-z,max-page-size=16384")
             }
         }
     }
 
+    // Critical: Packaging options to fix potential 16 KB loading errors
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 
     buildTypes {
         release {
@@ -62,7 +57,7 @@ android {
     }
     buildFeatures{
         buildConfig = true
-        viewBinding =true
+        viewBinding = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -71,29 +66,49 @@ android {
 }
 
 dependencies {
+    // AndroidX & UI
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.recyclerview)
+
+    // Auth & Google Services
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation("de.hdodenhof:circleimageview:3.1.0")
-    implementation("com.squareup.picasso:picasso:2.8")
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
+
+    // Firebase
     implementation(libs.firebase.database)
-    implementation(libs.recyclerview)
     implementation(libs.firebase.auth)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-messaging")
+
+    // Image Loading & UI Helpers
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation("com.squareup.picasso:picasso:2.8")
+
+    // --- GLIDE FIXED FOR JAVA IN KTS ---
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.firebase.messaging)
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Tools
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.guava:guava:31.1-android")
+
+    // SDKs
+    implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
+    implementation("io.agora.rtc:full-sdk:4.6.1")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.google.code.gson:gson:2.10.1")
-    // Gemini SDK
-    implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
-    // Async support for Java
-    implementation("com.google.guava:guava:31.1-android")
-    implementation("io.agora.rtc:full-sdk:4.6.1")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

@@ -1,6 +1,10 @@
 package com.example.connectifychattingapp;
 
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.content.Intent;
+import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,39 +17,61 @@ import com.google.firebase.database.ValueEventListener;
 
 public class VideoCallIncomingActivity extends AppCompatActivity {
     ActivityVideoCallIncomingBinding binding;
-    FirebaseAuth auth;
+    private String channelId, callerId, callerName, callerPic;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true); setTurnScreenOn(true);
+            KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (km != null) km.requestDismissKeyguard(this, null);
+        }
         binding = ActivityVideoCallIncomingBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        auth = FirebaseAuth.getInstance();
+        callerName = getIntent().getStringExtra("callerName");
+        callerId = getIntent().getStringExtra("callerId");
+        channelId = getIntent().getStringExtra("channelId");
+        callerPic = getIntent().getStringExtra("callerPic");
 
-        // SYNC LISTENER
-        FirebaseDatabase.getInstance().getReference().child("calls").child(auth.getUid())
+        binding.tvCallerName.setText(callerName);
+        playRingtone();
+
+        FirebaseDatabase.getInstance().getReference().child("calls").child(FirebaseAuth.getInstance().getUid())
                 .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) finish();
-                    }
+                    public void onDataChange(@NonNull DataSnapshot snapshot) { if (!snapshot.exists()) cleanupAndFinish(); }
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {}
                 });
 
         binding.btnAnswerVideo.setOnClickListener(v -> {
-            FirebaseDatabase.getInstance().getReference().child("calls").child(auth.getUid()).child("status").setValue("picked");
+            FirebaseDatabase.getInstance().getReference().child("calls").child(FirebaseAuth.getInstance().getUid()).child("status").setValue("picked");
             Intent intent = new Intent(this, VideoCallActivty.class);
-            intent.putExtras(getIntent().getExtras());
+            intent.putExtra("channelId", channelId);
+            intent.putExtra("remoteUserId", callerId);
+            intent.putExtra("remoteUserName", callerName);
             intent.putExtra("isCaller", false);
             startActivity(intent);
-            finish();
+            cleanupAndFinish();
         });
 
         binding.btnDeclineVideo.setOnClickListener(v -> {
-            FirebaseDatabase.getInstance().getReference().child("calls").child(auth.getUid()).removeValue();
-            finish();
+            FirebaseDatabase.getInstance().getReference().child("calls").child(FirebaseAuth.getInstance().getUid()).removeValue();
+            cleanupAndFinish();
         });
+    }
+
+    private void playRingtone() {
+        mediaPlayer = MediaPlayer.create(this, R.raw.ringtone);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
+    }
+
+    private void cleanupAndFinish() {
+        if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); mediaPlayer = null; }
+        finish();
     }
 }
